@@ -3,13 +3,13 @@ import FormData from 'form-data';
 import { createReadStream } from 'fs';
 import { delay } from './utils/delay';
 
-const endpoint = 'valleycollaborative';
-const FRESHDESK_API_KEY = 'oVoz8qD5Gg1MuG1yjy0';
+const endpoint = process.env.FRESHDESK_ENDPOINT;
+const apiKey = process.env.FRESHDESK_API_KEY;
 const photoDir = `../../../GCS/System Galaxy/Badging/AdpPhotos/00000`;
 
 const freshdeskClient = axios.create({
     baseURL: `https://${endpoint}.freshdesk.com/`,
-    auth: { username: FRESHDESK_API_KEY, password: '' },
+    auth: { username: apiKey, password: '' },
     timeout: 10000,
 });
 
