@@ -4,7 +4,7 @@ import workers from './cardholders.json';
 /**
  * Copies images to another folder an renames them based on the cardholder's first and last names.
  */
-export async function renameImages() {
+export const renameImages = async () => {
     for (const { firstName, lastName, photoFilepath } of workers) {
         const oldPath = photoFilepath.replace('Photos\\', 'AdpPhotos\\');
         const newPath = oldPath.replace(
@@ -18,4 +18,4 @@ export async function renameImages() {
             console.error(err);
         }
     }
-}
+};

@@ -1,8 +1,9 @@
 import { authorize, updateAllProfilePhotos } from './google';
+import { doMicrosoftThings } from './microsoft';
 
 void main();
 
 async function main() {
     console.log('main');
-    await authorize().then(updateAllProfilePhotos).catch(console.error);
+    await doMicrosoftThings().then(console.log).catch(console.error);
 }

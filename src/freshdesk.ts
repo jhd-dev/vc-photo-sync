@@ -1,10 +1,11 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import { createReadStream } from 'fs';
+import env from './env';
 import { delay } from './utils/delay';
 
-const endpoint = process.env.FRESHDESK_ENDPOINT;
-const apiKey = process.env.FRESHDESK_API_KEY;
+const endpoint = env.FRESHDESK_ENDPOINT;
+const apiKey = env.FRESHDESK_API_KEY;
 const photoDir = `../../../GCS/System Galaxy/Badging/AdpPhotos/00000`;
 
 const freshdeskClient = axios.create({
@@ -13,7 +14,7 @@ const freshdeskClient = axios.create({
     timeout: 10000,
 });
 
-export async function updateFreshdeskPhotos() {
+export const updateFreshdeskPhotos = async () => {
     const contacts = await getContacts();
     for (const contact of contacts) {
         const splitName = contact.name.split(' ');
@@ -22,7 +23,7 @@ export async function updateFreshdeskPhotos() {
         console.log(splitName);
         await updateContact(firstName, lastName, contact.id);
     }
-}
+};
 
 // async function getNames() {
 //     try {
@@ -39,7 +40,7 @@ export async function updateFreshdeskPhotos() {
 //     }
 // }
 
-async function getContacts() {
+const getContacts = async () => {
     let hasMore = true;
     let page = 1;
     const contacts: any[] = [];
@@ -60,13 +61,13 @@ async function getContacts() {
         }
     }
     return contacts;
-}
+};
 
-async function updateContact(
+const updateContact = async (
     firstName: string,
     lastName: string,
     contactId: number
-) {
+) => {
     try {
         const formData = new FormData();
         formData.append(
@@ -77,4 +78,4 @@ async function updateContact(
     } catch (err: any) {
         console.error(err.message);
     }
-}
+};

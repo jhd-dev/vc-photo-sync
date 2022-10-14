@@ -4,22 +4,22 @@ import { google } from 'googleapis';
 import { join } from 'path';
 import { getCardholders } from './galaxy';
 
-const SCOPES = ['https://www.googleapis.com/auth/admin.directory.user'];
-const TOKEN_PATH = join(process.cwd(), 'google-token.json');
-const CREDENTIALS_PATH = join(process.cwd(), 'google-credentials.json');
+const scopes = ['https://www.googleapis.com/auth/admin.directory.user'];
+const tokenPath = join(process.cwd(), 'google-token.json');
+const credentialsPath = join(process.cwd(), 'google-credentials.json');
 
-async function loadSavedCredentialsIfExist() {
+const loadSavedCredentials = async () => {
     try {
-        const content = await readFile(TOKEN_PATH);
+        const content = await readFile(tokenPath);
         const credentials = JSON.parse(content.toString());
         return google.auth.fromJSON(credentials);
-    } catch (err) {
+    } catch (err: unknown) {
         return null;
     }
-}
+};
 
-async function saveCredentials(client: any) {
-    const content = await readFile(CREDENTIALS_PATH);
+const saveCredentials = async (client: any) => {
+    const content = await readFile(credentialsPath);
     const keys = JSON.parse(content.toString());
     const key = keys.installed || keys.web;
     const payload = JSON.stringify({
@@ -28,25 +28,22 @@ async function saveCredentials(client: any) {
         client_secret: key.client_secret,
         refresh_token: client.credentials.refresh_token,
     });
-    await writeFile(TOKEN_PATH, payload);
-}
+    await writeFile(tokenPath, payload);
+};
 
-export async function authorize() {
-    let client = await loadSavedCredentialsIfExist();
-    if (client) {
-        return client;
-    }
-    client = (await authenticate({
-        scopes: SCOPES,
-        keyfilePath: CREDENTIALS_PATH,
+export const authorize = async () => {
+    const existingClient = await loadSavedCredentials();
+    if (existingClient) return existingClient;
+
+    const newClient = (await authenticate({
+        scopes: scopes,
+        keyfilePath: credentialsPath,
     })) as any;
-    if (client.credentials) {
-        await saveCredentials(client);
-    }
-    return client;
-}
+    if (newClient.credentials) await saveCredentials(newClient);
+    return newClient;
+};
 
-export async function updateAllProfilePhotos(auth: any) {
+export const updateAllProfilePhotos = async (auth: any) => {
     console.log('updateAllProfilePhotos');
     const service = google.admin({ version: 'directory_v1', auth });
     const cardholders = await getCardholders();
@@ -74,7 +71,7 @@ export async function updateAllProfilePhotos(auth: any) {
                     encoding: 'base64url',
                 });
                 try {
-                    const res = await service.users.photos.update({
+                    await service.users.photos.update({
                         userKey: user.id,
                         requestBody: { photoData: photo, mimeType: 'JPEG' },
                     });
@@ -88,8 +85,7 @@ export async function updateAllProfilePhotos(auth: any) {
             console.log(
                 `Couldn't find user of the given name ${cardholder.firstName} ${cardholder.lastName}`
             );
-            // console.error(err);
             continue;
         }
     }
-}
+};
