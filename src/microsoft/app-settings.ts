@@ -1,10 +1,4 @@
-const settings: AppSettings = {
-    clientId: process.env.AZURE_AD_CLIENT_ID,
-    clientSecret: process.env.AZURE_AD_CLIENT_SECRET,
-    tenantId: process.env.AZURE_AD_TENANT_ID,
-    authTenant: process.env.AZURE_AD_TENANT_ID,
-    graphUserScopes: ['user.read', 'mail.read', 'mail.send'],
-};
+import env from '../env';
 
 export interface AppSettings {
     clientId: string;
@@ -13,5 +7,13 @@ export interface AppSettings {
     authTenant: string;
     graphUserScopes: string[];
 }
+
+const settings: AppSettings = {
+    clientId: env.AZURE_AD_CLIENT_ID,
+    clientSecret: env.AZURE_AD_CLIENT_SECRET,
+    tenantId: env.AZURE_AD_TENANT_ID,
+    authTenant: env.AZURE_AD_TENANT_ID,
+    graphUserScopes: ['user.read', 'mail.read', 'mail.send'],
+};
 
 export default settings;

@@ -1,88 +1,80 @@
-import * as readline from 'readline-sync';
 import { DeviceCodeInfo } from '@azure/identity';
-import { Message, User } from '@microsoft/microsoft-graph-types';
+import { readFile } from 'fs/promises';
+import { z } from 'zod';
 import settings, { AppSettings } from './app-settings';
-import * as graphHelper from './graph-helper';
+import {
+    initGraphForUserAuth,
+    getUserById,
+    getUserPhoto,
+    updateUserPhoto,
+} from './graph-helper';
+import cardholders from '../cardholders.json';
 
-async function main() {
-    console.log('TypeScript Graph Tutorial');
+const domain = 'valleycollaborative.org';
 
-    let choice = 0;
+const errorSchema = z.object({
+    statusCode: z.number().int(),
+});
 
-    // Initialize Graph
+export const updateAllUserPhotos = async () => {
     initializeGraph(settings);
+    for (const { firstName, lastName, photoFilepath } of cardholders) {
+        const email = getEmailFromName(
+            firstName.toString(),
+            lastName.toString()
+        );
+        console.log(`Cardholder: ${firstName} ${lastName}: ${email}`);
+        try {
+            const user = await getUserById(email);
+            if (!user || user.displayName[1] !== firstName[1]) continue;
 
-    // Greet the user by name
-    await greetUserAsync();
+            try {
+                const photo = await getUserPhoto(email);
+                console.log('Photo exists:');
+                console.log(photo);
+            } catch (err: unknown) {
+                const validatedErr = errorSchema.parse(err);
+                if (validatedErr?.statusCode !== 404) {
+                    console.error(err);
+                    continue;
+                }
 
-    const choices = [
-        'Display access token',
-        'List my inbox',
-        'Send mail',
-        'List users (requires app-only)',
-        'Make a Graph call',
-    ];
-
-    while (choice != -1) {
-        choice = readline.keyInSelect(choices, 'Select an option', {
-            cancel: 'Exit',
-        });
-
-        switch (choice) {
-            case -1:
-                // Exit
-                console.log('Goodbye...');
-                break;
-            case 0:
-                // Display access token
-                await displayAccessTokenAsync();
-                break;
-            case 1:
-                // List emails from user's inbox
-                await listInboxAsync();
-                break;
-            case 2:
-                // Send an email message
-                await sendMailAsync();
-                break;
-            case 3:
-                // List users
-                await listUsersAsync();
-                break;
-            case 4:
-                // Run any Graph code
-                await makeGraphCallAsync();
-                break;
-            default:
-                console.log('Invalid choice! Please try again.');
+                console.log('Photo does not exist. Uploading...');
+                const photo = await readFile(photoFilepath);
+                await updateUserPhoto(email, photo);
+            }
+        } catch (err: unknown) {
+            console.log(
+                `User ${firstName} ${lastName} does not exist. Continuing...`
+            );
         }
     }
-}
+};
 
-function initializeGraph(settings: AppSettings) {
-    // TODO
-}
+const initializeGraph = (settings: AppSettings) =>
+    initGraphForUserAuth(settings, (info: DeviceCodeInfo) =>
+        console.log(info.message)
+    );
 
-async function greetUserAsync() {
-    // TODO
-}
+const getEmailFromName = (firstName: string, lastName: string) =>
+    `${firstName[0]}${lastName}@${domain}`.replace(' ', '').toLowerCase();
 
-async function displayAccessTokenAsync() {
-    // TODO
-}
+// const listUsers = async () => {
+//     try {
+//         const userPage = await getUsers();
+//         const users: User[] = userPage.value;
 
-async function listInboxAsync() {
-    // TODO
-}
+//         for (const user of users) {
+//             console.log(`User: ${user.displayName ?? 'NO NAME'}`);
+//             console.log(`  ID: ${user.id}`);
+//             console.log(`  Email: ${user.mail ?? 'NO EMAIL'}`);
+//         }
 
-async function sendMailAsync() {
-    // TODO
-}
-
-async function listUsersAsync() {
-    // TODO
-}
-
-async function makeGraphCallAsync() {
-    // TODO
-}
+//         // If @odata.nextLink is not undefined, there are more users
+//         // available on the server
+//         const moreAvailable = userPage['@odata.nextLink'] != undefined;
+//         console.log(`\nMore users available? ${moreAvailable}`);
+//     } catch (err) {
+//         console.log(`Error getting users: ${err}`);
+//     }
+// };
