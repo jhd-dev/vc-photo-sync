@@ -8,7 +8,7 @@ import {
     getUserPhoto,
     updateUserPhoto,
 } from './graph-helper';
-import cardholders from '../cardholders.json';
+import cardholders from '../cardholders';
 
 const domain = 'valleycollaborative.org';
 

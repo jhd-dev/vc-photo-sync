@@ -5,7 +5,7 @@ import {
     DeviceCodePromptCallback,
 } from '@azure/identity';
 import { Client, PageCollection } from '@microsoft/microsoft-graph-client';
-import { User, Message } from '@microsoft/microsoft-graph-types';
+import { User } from '@microsoft/microsoft-graph-types';
 import { TokenCredentialAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials';
 import { AppSettings } from './app-settings';
 

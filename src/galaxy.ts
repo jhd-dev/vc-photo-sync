@@ -1,4 +1,4 @@
-import cardholders from './cardholders.json';
+import cardholders from './cardholders';
 
 export const getCardholders = async () =>
     cardholders.map(
