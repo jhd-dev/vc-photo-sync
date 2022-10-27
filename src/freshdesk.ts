@@ -1,12 +1,12 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import { createReadStream } from 'fs';
+import { Cardholder } from './cardholders';
 import env from './env';
 import { delay } from './utils/delay';
 
 const endpoint = env.FRESHDESK_ENDPOINT;
 const apiKey = env.FRESHDESK_API_KEY;
-const photoDir = `../../../GCS/System Galaxy/Badging/AdpPhotos/00000`;
 
 const freshdeskClient = axios.create({
     baseURL: `https://${endpoint}.freshdesk.com/`,
@@ -14,31 +14,20 @@ const freshdeskClient = axios.create({
     timeout: 10000,
 });
 
-export const updateFreshdeskPhotos = async () => {
+export const updateFreshdeskPhotos = async (cardholders: Cardholder[]) => {
     const contacts = await getContacts();
-    for (const contact of contacts) {
-        const splitName = contact.name.split(' ');
-        const lastName = splitName.pop();
-        const firstName = splitName.join(' ');
-        console.log(splitName);
-        await updateContact(firstName, lastName, contact.id);
+    for (const cardholder of cardholders) {
+        const contact = contacts.find(
+            (contact) =>
+                contact.name ===
+                `${cardholder.firstName} ${cardholder.lastName}`
+        );
+        if (contact != null) {
+            console.log(contact.name);
+            await updateContact(contact.id, cardholder.photoFilepath);
+        }
     }
 };
-
-// async function getNames() {
-//     try {
-//         const allFiles = await readdir(photoDir);
-//         const filteredFiles = allFiles.filter(
-//             (file) =>
-//                 file.split('_').length === 2 &&
-//                 !/[0-9]/g.test(file) &&
-//                 file.substring(0, 1) !== '.'
-//         );
-//         return filteredFiles;
-//     } catch (err: unknown) {
-//         console.error(err);
-//     }
-// }
 
 const getContacts = async () => {
     let hasMore = true;
@@ -63,17 +52,10 @@ const getContacts = async () => {
     return contacts;
 };
 
-const updateContact = async (
-    firstName: string,
-    lastName: string,
-    contactId: number
-) => {
+const updateContact = async (contactId: string, photoFilepath: string) => {
     try {
         const formData = new FormData();
-        formData.append(
-            'avatar',
-            createReadStream(`${photoDir}/${firstName}_${lastName}.jpg`)
-        );
+        formData.append('avatar', createReadStream(photoFilepath));
         await freshdeskClient.put(`api/v2/contacts/${contactId}`, formData);
     } catch (err: any) {
         console.error(err.message);

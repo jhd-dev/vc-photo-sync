@@ -12,4 +12,6 @@ const cardholdersSchema = z
     })
     .array();
 
+export type Cardholder = z.infer<typeof cardholdersSchema>[number];
+
 export default cardholdersSchema.parse(cardholders);
